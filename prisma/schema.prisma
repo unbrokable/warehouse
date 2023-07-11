@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
+
+  email    String    @unique
+  password String
+  owner    Owner?
+  employee Employee?
+
+  @@map("users")
+}
+
+model Owner {
+  id            Int                     @id
+  user          User                    @relation(fields: [id], references: [id], onDelete: Cascade)
+  organizations OwnersInOrganizations[]
+
+  @@map("owners")
+}
+
+model Employee {
+  id   Int  @id
+  user User @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  @@map("employees")
+}
+
+model Organization {
+  id        Int                     @unique @default(autoincrement())
+  name      String                  @unique
+  owners    OwnersInOrganizations[]
+  warehouse Warehouse[]
+
+  @@map("organizations")
+}
+
+model OwnersInOrganizations {
+  ownerId Int
+  owner   Owner @relation(fields: [ownerId], references: [id])
+
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([ownerId, organizationId])
+  @@map("owners_in_organizations")
+}
+
+model Warehouse {
+  id   Int    @unique @default(autoincrement())
+  name String
+
+  location       String       @unique
+  organizationId Int
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("warehouses")
+}
